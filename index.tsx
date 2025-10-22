@@ -484,7 +484,7 @@ const App: React.FC = () => {
                 type="text"
                 value={uf}
                 onChange={(e) => setUf(e.target.value.toUpperCase())}
-                placeholder="Ex: SP / SPI"
+                placeholder="Ex: SPI"
                 maxLength={3}
                 required
               />
