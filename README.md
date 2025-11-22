@@ -10,7 +10,7 @@
 ### 📸 Demonstração
 
 <div align="center">
-  <img src="https://via.placeholder.com/1200x600?text=Print+do+Controle+de+Chamados" width="100%" alt="Dashboard Screenshot" />
+  <img src="https://imgur.com/WeuakNA.png" width="100%" alt="Dashboard Screenshot" />
 </div>
 
 ---
