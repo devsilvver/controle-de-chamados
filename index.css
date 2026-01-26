@@ -122,12 +122,19 @@ h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
 
 /* CONTROLS & FEED */
 .controls-bar { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem; }
+
+.search-group { display: flex; gap: 1rem; flex: 1; }
 .search-box { position: relative; flex: 1; }
 .search-box .icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); opacity: 0.5; font-size: 1rem; }
 .search-box input {
   width: 100%; padding: 0.85rem 0.85rem 0.85rem 2.8rem; border-radius: var(--radius-md);
   border: 1px solid var(--border-color); font-size: 1rem;
   box-shadow: var(--shadow-card);
+}
+.date-box input {
+    padding: 0.82rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);
+    font-size: 1rem; font-family: inherit; color: var(--text-primary);
+    box-shadow: var(--shadow-card);
 }
 
 .filter-pills { display: flex; gap: 0.75rem; overflow-x: auto; padding-bottom: 2px; }
@@ -139,21 +146,38 @@ h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
 .pill:hover { background: #f8fafc; }
 .pill.active { background: var(--text-primary); color: white; border-color: var(--text-primary); }
 
-/* DAY GROUP */
-.day-group { margin-bottom: 2.5rem; }
-.day-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
-.day-title { font-size: 0.9rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
-.day-line { height: 1px; background: var(--border-color); width: 100%; }
-.day-list { display: flex; flex-direction: column; gap: 0.85rem; }
+/* YEAR & MONTH GROUPS (Novos Estilos) */
+.year-box {
+    background: white; border-radius: var(--radius-lg); padding: 1.5rem;
+    border: 1px solid var(--border-color); box-shadow: var(--shadow-soft);
+    margin-bottom: 2.5rem;
+}
+.year-title {
+    font-size: 1.5rem; font-weight: 800; color: var(--text-primary);
+    margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 2px solid #f1f5f9;
+}
+.year-content { display: flex; flex-direction: column; gap: 2rem; }
+
+.month-box {
+    padding-left: 0.5rem;
+}
+.month-title {
+    font-size: 1.1rem; font-weight: 600; color: var(--primary);
+    margin-bottom: 1rem; text-transform: capitalize;
+}
+.month-list {
+    display: flex; flex-direction: column; gap: 0.85rem;
+}
 
 /* TICKET CARD */
 .ticket-card {
-  background: white; border-radius: var(--radius-md); padding: 1.25rem 1.5rem;
-  box-shadow: var(--shadow-card); border: 1px solid transparent;
+  background: #f8fafc; /* Card levemente mais escuro dentro do box branco */
+  border-radius: var(--radius-md); padding: 1.25rem 1.5rem;
+  border: 1px solid var(--border-color);
   display: flex; justify-content: space-between; align-items: center;
-  transition: transform 0.2s;
+  transition: transform 0.2s, background 0.2s;
 }
-.ticket-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-soft); }
+.ticket-card:hover { transform: translateY(-2px); background: white; box-shadow: var(--shadow-soft); border-color: var(--primary); }
 
 .card-left { display: flex; align-items: center; gap: 1.25rem; }
 .status-dot { width: 12px; height: 12px; border-radius: 50%; }
@@ -176,14 +200,14 @@ h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
 .tag.status.Trabalhado { background: var(--warning-bg); color: var(--warning-text); }
 .tag.status.Cancelado { background: var(--danger-bg); color: var(--danger-text); }
 
-/* Novas Ações Diretas */
+/* Ações Diretas */
 .actions-direct { display: flex; align-items: center; gap: 0.5rem; margin-left: 1rem; padding-left: 1rem; border-left: 1px solid var(--border-color); }
 .action-btn {
     background: transparent; border: none; width: 32px; height: 32px; border-radius: 6px;
     display: flex; align-items: center; justify-content: center;
     color: var(--text-secondary); cursor: pointer; transition: all 0.2s;
 }
-.action-btn:hover { background: #f1f5f9; color: var(--primary); transform: scale(1.1); }
+.action-btn:hover { background: white; color: var(--primary); transform: scale(1.1); box-shadow: var(--shadow-card); }
 .action-btn.danger:hover { background: #fee2e2; color: #ef4444; }
 
 /* Dropdown (Backup) */
@@ -258,12 +282,14 @@ h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
 @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-30px);} 60% {transform: translateY(-15px);} }
 .pop-in { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 .scale-up { animation: popIn 0.3s ease-out; }
+.fade-in { animation: slideDown 0.4s ease-out; }
 
 /* RESPONSIVIDADE */
 @media (max-width: 800px) {
   .dashboard-summary { grid-template-columns: 1fr; }
   .form-row { grid-template-columns: 1fr; gap: 1rem; }
   .controls-bar { flex-direction: column; align-items: stretch; }
+  .search-group { flex-direction: column; }
   .card-left { gap: 0.75rem; }
 }
 

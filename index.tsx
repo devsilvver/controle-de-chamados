@@ -18,18 +18,18 @@ const DAILY_GOAL = 8;
 
 // --- Componentes Visuais ---
 
-// Ícones SVG para não depender de bibliotecas externas
+// Ícones SVG
 const Icons = {
   Copy: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>,
   Edit: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>,
   Trash: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>,
   Check: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>,
   Close: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>,
-  Trophy: () => <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#FFD700" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 21h8m-4-9v9m0-9a5 5 0 0 1-5-5V3h10v4a5 5 0 0 1-5 5zm-9-5a9 9 0 0 1 9-9 9 9 0 0 1 9 9"/></svg>
+  Trophy: () => <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#FFD700" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 21h8m-4-9v9m0-9a5 5 0 0 1-5-5V3h10v4a5 5 0 0 1-5 5zm-9-5a9 9 0 0 1 9-9 9 9 0 0 1 9 9"/></svg>,
+  Calendar: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
 };
 
 const Confetti: React.FC = () => {
-  // Aumentei a quantidade para ser mais impactante
   const confettiCount = 200;
   const colors = ['#a864fd', '#29cdff', '#78ff44', '#ff718d', '#fdff6a', '#FFD700'];
 
@@ -39,7 +39,7 @@ const Confetti: React.FC = () => {
         const style: React.CSSProperties = {
           left: `${Math.random() * 100}%`,
           backgroundColor: colors[Math.floor(Math.random() * colors.length)],
-          animationDuration: `${Math.random() * 2 + 3}s`, // Mais rápido
+          animationDuration: `${Math.random() * 2 + 3}s`,
           animationDelay: `${Math.random() * 2}s`,
         };
         const className = `confetto confetto-shape-${index % 3}`;
@@ -62,6 +62,13 @@ const parseTimestamp = (timestamp: string): Date => {
   return new Date(timestamp);
 };
 
+const getMonthName = (monthIndex: number) => {
+  const date = new Date();
+  date.setMonth(monthIndex);
+  const name = new Intl.DateTimeFormat('pt-BR', { month: 'long' }).format(date);
+  return name.charAt(0).toUpperCase() + name.slice(1);
+};
+
 // --- Componente Principal ---
 const App: React.FC = () => {
   const statusOptions: Ticket['status'][] = ['Concluído', 'Diagnóstico', 'Trabalhado', 'Cancelado'];
@@ -74,7 +81,6 @@ const App: React.FC = () => {
       
       let savedTickets = JSON.parse(savedTicketsRaw);
 
-      // Migração de dados legados
       if (savedTickets.length > 0 && savedTickets.some((t: any) => 'resolutionType' in t)) {
         return savedTickets.map((ticket: any) => {
           const { resolutionType, ...rest } = ticket;
@@ -92,31 +98,28 @@ const App: React.FC = () => {
     }
   });
 
-  // Estados de Formulário
   const [wo, setWo] = useState<string>('');
   const [uf, setUf] = useState<string>('');
   const [status, setStatus] = useState<Ticket['status']>('Concluído');
   const [isPresencial, setIsPresencial] = useState<boolean>(false);
   
-  // Filtros e UI
+  // Filtros
   const [filterStatus, setFilterStatus] = useState<FilterType>('All');
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [searchDate, setSearchDate] = useState<string>(''); // Novo estado para data
+
   const [toast, setToast] = useState<{ message: string; type: ToastType }>({ message: '', type: 'success' });
   const [isDataMenuOpen, setIsDataMenuOpen] = useState<boolean>(false);
   
-  // Edição
   const [editingTicketId, setEditingTicketId] = useState<number | null>(null);
   const [editFormData, setEditFormData] = useState<Omit<Ticket, 'id' | 'timestamp'>>({ wo: '', uf: '', status: 'Concluído', isPresencial: false });
 
-  // Modais Customizados
   const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean, ticketId: number | null }>({ isOpen: false, ticketId: null });
   const [celebrationModal, setCelebrationModal] = useState<boolean>(false);
 
-  // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dataMenuRef = useRef<HTMLDivElement>(null);
   
-  // Cálculos
   const todaysCount = useMemo(() => tickets.filter(ticket => {
     if (!ticket.timestamp) return false;
     const ticketDate = parseTimestamp(ticket.timestamp);
@@ -130,23 +133,19 @@ const App: React.FC = () => {
 
   const prevTodaysCount = useRef(todaysCount);
 
-  // Persistência
   useEffect(() => {
     localStorage.setItem('tickets', JSON.stringify(tickets));
   }, [tickets]);
   
-  // Efeito de Meta Batida
   useEffect(() => {
     if (prevTodaysCount.current < DAILY_GOAL && todaysCount >= DAILY_GOAL) {
       setCelebrationModal(true);
-      // Auto fechar após 6 segundos se o usuário não fechar
       const timer = setTimeout(() => setCelebrationModal(false), 6000);
       return () => clearTimeout(timer);
     }
     prevTodaysCount.current = todaysCount;
   }, [todaysCount]);
 
-  // Toast Timer
   useEffect(() => {
     if (toast.message) {
       const timer = setTimeout(() => {
@@ -156,7 +155,6 @@ const App: React.FC = () => {
     }
   }, [toast]);
 
-  // Click Outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
         const target = event.target as Node;
@@ -169,8 +167,6 @@ const App: React.FC = () => {
         document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isDataMenuOpen]);
-
-  // --- Handlers ---
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -282,50 +278,62 @@ const App: React.FC = () => {
     reader.readAsText(file);
   };
 
-  // Filtragem e Agrupamento
+  // --- Lógica de Filtro e Agrupamento Atualizada ---
+
   const filterOptions: FilterType[] = ['All', 'Presenciais', ...statusOptions];
 
   const filteredTickets = tickets.filter(ticket => {
+    // 1. Filtro de Status
     let statusMatch = true;
     if (filterStatus === 'All') statusMatch = true;
     else if (filterStatus === 'Presenciais') statusMatch = ticket.isPresencial === true;
     else statusMatch = ticket.status === filterStatus;
 
+    // 2. Filtro de Texto (WO)
     const searchMatch = ticket.wo.toLowerCase().includes(searchTerm.toLowerCase());
-    return statusMatch && searchMatch;
+
+    // 3. Filtro de Data (Novo)
+    let dateMatch = true;
+    if (searchDate) {
+        const ticketDate = parseTimestamp(ticket.timestamp);
+        // Formata data do ticket para YYYY-MM-DD para comparar com o input type="date"
+        const year = ticketDate.getFullYear();
+        const month = String(ticketDate.getMonth() + 1).padStart(2, '0');
+        const day = String(ticketDate.getDate()).padStart(2, '0');
+        const ticketDateString = `${year}-${month}-${day}`;
+        
+        dateMatch = ticketDateString === searchDate;
+    }
+
+    return statusMatch && searchMatch && dateMatch;
   });
   
+  // Agrupamento: Ano -> Mês -> Tickets
   const groupedTickets = filteredTickets.reduce((acc, ticket) => {
-    if (!ticket.timestamp) return acc;
     const ticketDate = parseTimestamp(ticket.timestamp);
     if (isNaN(ticketDate.getTime())) return acc;
     
-    const dateKey = new Date(ticketDate.getFullYear(), ticketDate.getMonth(), ticketDate.getDate()).toISOString();
-    if (!acc[dateKey]) acc[dateKey] = [];
-    acc[dateKey].push(ticket);
+    const year = ticketDate.getFullYear();
+    const month = ticketDate.getMonth(); // 0 a 11
+
+    if (!acc[year]) {
+        acc[year] = {};
+    }
+    if (!acc[year][month]) {
+        acc[year][month] = [];
+    }
+    acc[year][month].push(ticket);
     return acc;
-  }, {} as Record<string, Ticket[]>);
+  }, {} as Record<number, Record<number, Ticket[]>>);
 
-  const sortedDateKeys = Object.keys(groupedTickets).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
-
-  const formatDateHeader = (dateKey: string): string => {
-    const today = new Date();
-    const yesterday = new Date();
-    yesterday.setDate(today.getDate() - 1);
-    const keyDate = new Date(dateKey);
-
-    if (keyDate.toDateString() === today.toDateString()) return 'Hoje';
-    if (keyDate.toDateString() === yesterday.toDateString()) return 'Ontem';
-    
-    const formatted = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }).format(keyDate);
-    return formatted.charAt(0).toUpperCase() + formatted.slice(1);
-  };
+  // Ordenar Anos (Decrescente)
+  const sortedYears = Object.keys(groupedTickets).map(Number).sort((a, b) => b - a);
   
   const progress = Math.min((todaysCount / DAILY_GOAL) * 100, 100);
 
   return (
     <main>
-      {/* --- MODAL DE CELEBRAÇÃO --- */}
+      {/* Modais */}
       {celebrationModal && (
         <div className="modal-overlay celebration-overlay">
             <Confetti />
@@ -338,7 +346,6 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* --- MODAL DE EXCLUSÃO --- */}
       {deleteConfirmation.isOpen && (
         <div className="modal-overlay fade-in">
             <div className="modal-content scale-up">
@@ -469,14 +476,24 @@ const App: React.FC = () => {
 
       <section className="feed-section">
         <div className="controls-bar">
-          <div className="search-box">
-             <span className="icon">🔎</span>
-             <input 
-              type="text"
-              placeholder="Pesquisar WO..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div className="search-group">
+             <div className="search-box">
+                <span className="icon">🔎</span>
+                <input 
+                 type="text"
+                 placeholder="Pesquisar WO..."
+                 value={searchTerm}
+                 onChange={(e) => setSearchTerm(e.target.value)}
+               />
+             </div>
+             <div className="date-box">
+                <input 
+                    type="date" 
+                    value={searchDate}
+                    onChange={(e) => setSearchDate(e.target.value)}
+                    title="Filtrar por data"
+                />
+             </div>
           </div>
           
           <div className="filter-pills">
@@ -502,72 +519,79 @@ const App: React.FC = () => {
 
         <div className="tickets-feed">
           {tickets.length > 0 ? (
-            sortedDateKeys.length > 0 ? (
-              sortedDateKeys.map(dateKey => (
-                <div key={dateKey} className="day-group fade-in">
-                  <div className="day-header">
-                    <span className="day-title">{formatDateHeader(dateKey)}</span>
-                    <span className="day-line"></span>
-                  </div>
-                  <div className="day-list">
-                  {groupedTickets[dateKey].map(ticket => (
-                    <div key={ticket.id} className="ticket-card">
-                      {editingTicketId === ticket.id ? (
-                        <div className="edit-mode">
-                          <input className="edit-input" type="text" value={editFormData.wo} onChange={e => setEditFormData({...editFormData, wo: e.target.value.toUpperCase()})} />
-                          <input className="edit-input small" type="text" value={editFormData.uf} maxLength={3} onChange={e => setEditFormData({...editFormData, uf: e.target.value.toUpperCase()})} />
-                          <select className="edit-input" value={editFormData.status} onChange={e => setEditFormData({...editFormData, status: e.target.value as Ticket['status']})}>
-                              {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                          </select>
-                           {editFormData.status === 'Concluído' && (
-                              <label className="checkbox-simple">
-                                  <input type="checkbox" checked={editFormData.isPresencial} onChange={e => setEditFormData({...editFormData, isPresencial: e.target.checked})} /> Presencial
-                              </label>
-                          )}
-                          <div className="edit-actions">
-                             <button onClick={() => handleSave(ticket.id)} className="btn-icon save" title="Salvar"><Icons.Check /></button>
-                             <button onClick={handleCancelEdit} className="btn-icon cancel" title="Cancelar"><Icons.Close /></button>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="card-left">
-                             <div className={`status-dot ${ticket.status}`}></div>
-                             <div>
-                                <div className="ticket-wo">{ticket.wo}</div>
-                                <div className="ticket-time">
-                                  {parseTimestamp(ticket.timestamp).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
-                                  <span className="dot-sep">•</span>
-                                  {ticket.uf}
-                                </div>
-                             </div>
-                          </div>
+            sortedYears.length > 0 ? (
+              sortedYears.map(year => (
+                <div key={year} className="year-box fade-in">
+                  <h2 className="year-title">{year}</h2>
+                  <div className="year-content">
+                      {Object.keys(groupedTickets[year])
+                          .map(Number)
+                          .sort((a, b) => b - a) // Ordena meses decrescente
+                          .map(month => (
+                              <div key={month} className="month-box">
+                                  <h3 className="month-title">{getMonthName(month)}</h3>
+                                  <div className="month-list">
+                                      {groupedTickets[year][month].map(ticket => (
+                                          <div key={ticket.id} className="ticket-card">
+                                            {editingTicketId === ticket.id ? (
+                                                <div className="edit-mode">
+                                                <input className="edit-input" type="text" value={editFormData.wo} onChange={e => setEditFormData({...editFormData, wo: e.target.value.toUpperCase()})} />
+                                                <input className="edit-input small" type="text" value={editFormData.uf} maxLength={3} onChange={e => setEditFormData({...editFormData, uf: e.target.value.toUpperCase()})} />
+                                                <select className="edit-input" value={editFormData.status} onChange={e => setEditFormData({...editFormData, status: e.target.value as Ticket['status']})}>
+                                                    {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                                </select>
+                                                {editFormData.status === 'Concluído' && (
+                                                    <label className="checkbox-simple">
+                                                        <input type="checkbox" checked={editFormData.isPresencial} onChange={e => setEditFormData({...editFormData, isPresencial: e.target.checked})} /> Presencial
+                                                    </label>
+                                                )}
+                                                <div className="edit-actions">
+                                                    <button onClick={() => handleSave(ticket.id)} className="btn-icon save" title="Salvar"><Icons.Check /></button>
+                                                    <button onClick={handleCancelEdit} className="btn-icon cancel" title="Cancelar"><Icons.Close /></button>
+                                                </div>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                <div className="card-left">
+                                                    <div className={`status-dot ${ticket.status}`}></div>
+                                                    <div>
+                                                        <div className="ticket-wo">{ticket.wo}</div>
+                                                        <div className="ticket-time">
+                                                        {parseTimestamp(ticket.timestamp).toLocaleDateString('pt-BR')} • {parseTimestamp(ticket.timestamp).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
+                                                        <span className="dot-sep">•</span>
+                                                        {ticket.uf}
+                                                        </div>
+                                                    </div>
+                                                </div>
 
-                          <div className="card-right">
-                             <div className="tags">
-                                {ticket.isPresencial && <span className="tag presencial">Presencial</span>}
-                                {(ticket.status === 'Diagnóstico' || ticket.status === 'Trabalhado' || ticket.status === 'Cancelado') && (
-                                   <span className="tag otrs">OTRS</span>
-                                )}
-                                <span className={`tag status ${ticket.status}`}>{ticket.status}</span>
-                             </div>
-                             
-                             <div className="actions-direct">
-                                <button onClick={() => handleCopyWo(ticket.wo)} className="action-btn" title="Copiar WO">
-                                    <Icons.Copy />
-                                </button>
-                                <button onClick={() => handleEdit(ticket)} className="action-btn" title="Editar">
-                                    <Icons.Edit />
-                                </button>
-                                <button onClick={() => setDeleteConfirmation({ isOpen: true, ticketId: ticket.id })} className="action-btn danger" title="Excluir">
-                                    <Icons.Trash />
-                                </button>
-                             </div>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  ))}
+                                                <div className="card-right">
+                                                    <div className="tags">
+                                                        {ticket.isPresencial && <span className="tag presencial">Presencial</span>}
+                                                        {(ticket.status === 'Diagnóstico' || ticket.status === 'Trabalhado' || ticket.status === 'Cancelado') && (
+                                                        <span className="tag otrs">OTRS</span>
+                                                        )}
+                                                        <span className={`tag status ${ticket.status}`}>{ticket.status}</span>
+                                                    </div>
+                                                    
+                                                    <div className="actions-direct">
+                                                        <button onClick={() => handleCopyWo(ticket.wo)} className="action-btn" title="Copiar WO">
+                                                            <Icons.Copy />
+                                                        </button>
+                                                        <button onClick={() => handleEdit(ticket)} className="action-btn" title="Editar">
+                                                            <Icons.Edit />
+                                                        </button>
+                                                        <button onClick={() => setDeleteConfirmation({ isOpen: true, ticketId: ticket.id })} className="action-btn danger" title="Excluir">
+                                                            <Icons.Trash />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                </>
+                                            )}
+                                          </div>
+                                      ))}
+                                  </div>
+                              </div>
+                          ))}
                   </div>
                 </div>
               ))
