@@ -81,7 +81,6 @@ const App: React.FC = () => {
   const [status, setStatus] = useState<Ticket['status']>('Concluído');
   const [isPresencial, setIsPresencial] = useState<boolean>(false);
   
-  // Atualizado tipo do filtro
   const [filterStatus, setFilterStatus] = useState<FilterType>('All');
   
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -130,17 +129,32 @@ const App: React.FC = () => {
     }
   }, [toast]);
 
+  // Lógica unificada para fechar menus ao clicar fora
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-        if (dataMenuRef.current && !dataMenuRef.current.contains(event.target as Node)) {
+        const target = event.target as Node;
+
+        // Fecha menu de dados (Configurações) se o clique não for nele
+        if (isDataMenuOpen && dataMenuRef.current && !dataMenuRef.current.contains(target)) {
             setIsDataMenuOpen(false);
         }
+
+        // Fecha menu de ações da linha se o clique não for dentro de um dropdown ou no botão de ação
+        if (actionsMenuId !== null) {
+            const isDropdown = (target as Element).closest('.dropdown-menu');
+            const isTrigger = (target as Element).closest('.btn-more');
+            if (!isDropdown && !isTrigger) {
+                setActionsMenuId(null);
+            }
+        }
     };
+    
+    // Usando 'mousedown' ou 'click' no document
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
         document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [isDataMenuOpen, actionsMenuId]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -260,7 +274,6 @@ const App: React.FC = () => {
     reader.readAsText(file);
   };
 
-  // Opções de filtro atualizadas
   const filterOptions: FilterType[] = ['All', 'Presenciais', ...statusOptions];
 
   const filteredTickets = tickets.filter(ticket => {
@@ -324,7 +337,10 @@ const App: React.FC = () => {
           <div className="header-actions" ref={dataMenuRef}>
             <button 
               className="btn-icon-only" 
-              onClick={() => setIsDataMenuOpen(prev => !prev)}
+              onClick={(e) => {
+                  e.stopPropagation(); // Impede que o clique feche imediatamente
+                  setIsDataMenuOpen(prev => !prev);
+              }}
               aria-label="Configurações"
               title="Backup e Restauração"
             >
@@ -501,11 +517,22 @@ const App: React.FC = () => {
                           <div className="card-right">
                              <div className="tags">
                                 {ticket.isPresencial && <span className="tag presencial">Presencial</span>}
+                                {(ticket.status === 'Diagnóstico' || ticket.status === 'Trabalhado' || ticket.status === 'Cancelado') && (
+                                   <span className="tag otrs">OTRS</span>
+                                )}
                                 <span className={`tag status ${ticket.status}`}>{ticket.status}</span>
                              </div>
                              
                              <div className="menu-wrapper">
-                                <button onClick={() => toggleActionsMenu(ticket.id)} className="btn-more">•••</button>
+                                <button 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleActionsMenu(ticket.id);
+                                    }} 
+                                    className="btn-more"
+                                >
+                                    •••
+                                </button>
                                 {actionsMenuId === ticket.id && (
                                   <div className="dropdown-menu">
                                     <button onClick={() => handleCopyWo(ticket.wo)}>Copiar WO</button>
