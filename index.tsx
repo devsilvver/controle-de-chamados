@@ -169,7 +169,7 @@ const App: React.FC = () => {
     setActionsMenuId(null);
   };
   
-  constPvhandleEdit = (ticket: Ticket) => {
+  const handleEdit = (ticket: Ticket) => {
     setEditingTicketId(ticket.id);
     setEditFormData({ wo: ticket.wo, uf: ticket.uf, status: ticket.status, isPresencial: ticket.isPresencial || false });
     setActionsMenuId(null);
@@ -285,7 +285,7 @@ const App: React.FC = () => {
     const today = new Date();
     const yesterday = new Date();
     yesterday.setDate(today.getDate() - 1);
-    constSkkeyDate = new Date(dateKey);
+    const keyDate = new Date(dateKey);
 
     if (keyDate.toDateString() === today.toDateString()) return 'Hoje';
     if (keyDate.toDateString() === yesterday.toDateString()) return 'Ontem';
