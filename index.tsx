@@ -129,17 +129,16 @@ const App: React.FC = () => {
     }
   }, [toast]);
 
-  // Lógica unificada para fechar menus ao clicar fora
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
         const target = event.target as Node;
 
-        // Fecha menu de dados (Configurações) se o clique não for nele
+        // Fecha menu de configurações
         if (isDataMenuOpen && dataMenuRef.current && !dataMenuRef.current.contains(target)) {
             setIsDataMenuOpen(false);
         }
 
-        // Fecha menu de ações da linha se o clique não for dentro de um dropdown ou no botão de ação
+        // Fecha menu de ações da linha
         if (actionsMenuId !== null) {
             const isDropdown = (target as Element).closest('.dropdown-menu');
             const isTrigger = (target as Element).closest('.btn-more');
@@ -149,7 +148,6 @@ const App: React.FC = () => {
         }
     };
     
-    // Usando 'mousedown' ou 'click' no document
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
         document.removeEventListener('mousedown', handleClickOutside);
@@ -186,7 +184,7 @@ const App: React.FC = () => {
     setActionsMenuId(null);
   };
   
-  const handleEdit = (ticket: Ticket) => {
+  constPvhandleEdit = (ticket: Ticket) => {
     setEditingTicketId(ticket.id);
     setEditFormData({ wo: ticket.wo, uf: ticket.uf, status: ticket.status, isPresencial: ticket.isPresencial || false });
     setActionsMenuId(null);
@@ -338,7 +336,7 @@ const App: React.FC = () => {
             <button 
               className="btn-icon-only" 
               onClick={(e) => {
-                  e.stopPropagation(); // Impede que o clique feche imediatamente
+                  e.stopPropagation();
                   setIsDataMenuOpen(prev => !prev);
               }}
               aria-label="Configurações"
@@ -419,17 +417,19 @@ const App: React.FC = () => {
             </div>
             
             <div className="form-footer">
-              {status === 'Concluído' && (
-                <label className="checkbox-modern">
-                  <input
-                    type="checkbox"
-                    checked={isPresencial}
-                    onChange={(e) => setIsPresencial(e.target.checked)}
-                  />
-                  <span className="checkmark"></span>
-                  Atendimento Presencial
-                </label>
-              )}
+              <div className="form-options">
+                {status === 'Concluído' && (
+                    <label className="checkbox-modern">
+                    <input
+                        type="checkbox"
+                        checked={isPresencial}
+                        onChange={(e) => setIsPresencial(e.target.checked)}
+                    />
+                    <span className="checkmark"></span>
+                    Atendimento Presencial
+                    </label>
+                )}
+              </div>
               <button type="submit" className="btn-submit">
                 Adicionar
               </button>

@@ -29,15 +29,15 @@ body {
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   padding: 1rem;
-  overflow-y: scroll; /* Evita pulo de layout */
+  overflow-y: scroll;
 }
 
-/* AUMENTADO DE 650px PARA 1200px PARA MONITOR ULTRAWIDE */
 #root { max-width: 1200px; margin: 0 auto; padding-bottom: 3rem; }
 
 /* HEADER */
 header { margin-bottom: 2rem; padding-top: 1rem; }
 .header-container { display: flex; justify-content: space-between; align-items: center; }
+.header-actions { position: relative; } /* CORREÇÃO: Garante o posicionamento do menu */
 
 .logo-area { display: flex; align-items: center; gap: 1rem; }
 .logo-icon { 
@@ -55,10 +55,10 @@ h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
 }
 .btn-icon-only:hover { background: #f1f5f9; color: var(--text-primary); }
 
-/* DASHBOARD GRID - Agora com Grid para telas grandes */
+/* DASHBOARD GRID */
 .dashboard-summary { 
     display: grid; 
-    grid-template-columns: 1fr 2fr; /* Meta menor, form maior */
+    grid-template-columns: 1fr 2fr;
     gap: 1.5rem; 
     margin-bottom: 2rem; 
 }
@@ -99,6 +99,8 @@ h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
 }
 
 .form-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 0.5rem; border-top: 1px dashed var(--border-color); margin-top: 0.25rem; }
+
+.form-options { min-height: 24px; display: flex; align-items: center; } /* Container fixo */
 
 /* Checkbox Moderno */
 .checkbox-modern { display: flex; align-items: center; gap: 0.6rem; cursor: pointer; font-size: 0.9rem; color: var(--text-primary); user-select: none; }
@@ -171,8 +173,6 @@ h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
 .tags { display: flex; align-items: center; gap: 0.75rem; }
 .tag { font-size: 0.75rem; padding: 4px 10px; border-radius: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
 .tag.presencial { background: #e0e7ff; color: #4338ca; }
-
-/* Estilo OTRS restaurado */
 .tag.otrs { background: var(--otrs-bg); color: var(--otrs-text); }
 
 .tag.status.Concluído { background: var(--success-bg); color: var(--success-text); }
