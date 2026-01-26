@@ -12,6 +12,7 @@ interface Ticket {
 }
 
 type ToastType = 'success' | 'info' | 'danger';
+type FilterType = Ticket['status'] | 'All' | 'Presenciais';
 
 const DAILY_GOAL = 8;
 
@@ -25,7 +26,7 @@ const Confetti: React.FC = () => {
         const style: React.CSSProperties = {
           left: `${Math.random() * 100}%`,
           backgroundColor: colors[Math.floor(Math.random() * colors.length)],
-          animationDuration: `${Math.random() * 3 + 4}s`, // 4 to 7 seconds
+          animationDuration: `${Math.random() * 3 + 4}s`,
           animationDelay: `${Math.random() * 5}s`,
         };
         const className = `confetto confetto-shape-${index % 3}`;
@@ -58,7 +59,6 @@ const App: React.FC = () => {
       
       let savedTickets = JSON.parse(savedTicketsRaw);
 
-      // Lógica de migração de legado
       if (savedTickets.length > 0 && savedTickets.some((t: any) => 'resolutionType' in t)) {
         return savedTickets.map((ticket: any) => {
           const { resolutionType, ...rest } = ticket;
@@ -80,7 +80,10 @@ const App: React.FC = () => {
   const [uf, setUf] = useState<string>('');
   const [status, setStatus] = useState<Ticket['status']>('Concluído');
   const [isPresencial, setIsPresencial] = useState<boolean>(false);
-  const [filterStatus, setFilterStatus] = useState<Ticket['status'] | 'All'>('All');
+  
+  // Atualizado tipo do filtro
+  const [filterStatus, setFilterStatus] = useState<FilterType>('All');
+  
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [editingTicketId, setEditingTicketId] = useState<number | null>(null);
   const [editFormData, setEditFormData] = useState<Omit<Ticket, 'id' | 'timestamp'>>({ wo: '', uf: '', status: 'Concluído', isPresencial: false });
@@ -257,10 +260,20 @@ const App: React.FC = () => {
     reader.readAsText(file);
   };
 
-  const filterOptions: (Ticket['status'] | 'All')[] = ['All', ...statusOptions];
+  // Opções de filtro atualizadas
+  const filterOptions: FilterType[] = ['All', 'Presenciais', ...statusOptions];
 
   const filteredTickets = tickets.filter(ticket => {
-    const statusMatch = filterStatus === 'All' || ticket.status === filterStatus;
+    let statusMatch = true;
+
+    if (filterStatus === 'All') {
+        statusMatch = true;
+    } else if (filterStatus === 'Presenciais') {
+        statusMatch = ticket.isPresencial === true;
+    } else {
+        statusMatch = ticket.status === filterStatus;
+    }
+
     const searchMatch = ticket.wo.toLowerCase().includes(searchTerm.toLowerCase());
     return statusMatch && searchMatch;
   });
@@ -300,78 +313,82 @@ const App: React.FC = () => {
     <main>
       {showConfetti && <Confetti />}
       <header>
-        <div className="header-content">
+        <div className="header-container">
           <div className="logo-area">
-             <h1>Controle de Chamados</h1>
-             <span className="subtitle">Gestão de produtividade</span>
+             <div className="logo-icon">📋</div>
+             <div>
+                <h1>Controle de Chamados</h1>
+                <span className="subtitle">Dashboard de Produtividade</span>
+             </div>
           </div>
-          <div className="data-menu-container" ref={dataMenuRef}>
+          <div className="header-actions" ref={dataMenuRef}>
             <button 
-              className="data-menu-trigger" 
+              className="btn-icon-only" 
               onClick={() => setIsDataMenuOpen(prev => !prev)}
-              aria-label="Opções"
+              aria-label="Configurações"
+              title="Backup e Restauração"
             >
-              &#9881;
+              ⚙️
             </button>
             {isDataMenuOpen && (
-              <div className="data-menu" role="menu">
-                <button onClick={() => { handleExport(); setIsDataMenuOpen(false); }}>Backup (JSON)</button>
-                <button onClick={() => { handleImportClick(); setIsDataMenuOpen(false); }}>Restaurar (JSON)</button>
+              <div className="dropdown-menu right">
+                <button onClick={() => { handleExport(); setIsDataMenuOpen(false); }}>💾 Backup (Exportar)</button>
+                <button onClick={() => { handleImportClick(); setIsDataMenuOpen(false); }}>Cc Restaurar (Importar)</button>
               </div>
             )}
           </div>
         </div>
       </header>
 
-      <section className="dashboard-grid">
-         {/* Card de Meta */}
-        <div className="daily-goal-container">
-          <div className="goal-header">
-            <h3>Meta Diária</h3>
-            <span className="goal-counter">{todaysCount} <span className="divider">/</span> {DAILY_GOAL}</span>
-          </div>
-          <div className="progress-bar-container">
-            <div 
-              className={`progress-bar ${todaysCount >= DAILY_GOAL ? 'goal-met' : ''}`}
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
-          <p className="goal-message">
-            {todaysCount >= DAILY_GOAL 
-              ? '🎉 Meta batida! Excelente trabalho.' 
-              : `Faltam apenas ${DAILY_GOAL - todaysCount} para a meta.`}
-          </p>
+      <section className="dashboard-summary">
+        <div className="card goal-card">
+           <div className="goal-info">
+              <span className="goal-label">Meta Diária</span>
+              <div className="goal-numbers">
+                <span className="current">{todaysCount}</span>
+                <span className="target">/ {DAILY_GOAL}</span>
+              </div>
+           </div>
+           <div className="goal-visual">
+              <div className="progress-bg">
+                <div 
+                  className={`progress-fill ${todaysCount >= DAILY_GOAL ? 'success' : ''}`}
+                  style={{ width: `${progress}%` }}
+                ></div>
+              </div>
+              <p className="goal-text">
+                {todaysCount >= DAILY_GOAL ? 'Meta atingida! 🚀' : `Faltam ${DAILY_GOAL - todaysCount} chamados`}
+              </p>
+           </div>
         </div>
 
-        {/* Formulário */}
-        <div className="form-container">
-          <form onSubmit={handleSubmit}>
-            <div className="form-grid">
-              <div className="form-group">
-                <label htmlFor="wo">WO</label>
+        <div className="card form-card">
+          <form onSubmit={handleSubmit} className="entry-form">
+            <div className="form-row">
+              <div className="input-group">
+                <label htmlFor="wo">Número WO</label>
                 <input
                   id="wo"
                   type="text"
                   value={wo}
                   onChange={(e) => setWo(e.target.value)}
-                  placeholder="0000012345"
+                  placeholder="00000..."
                   required
                 />
               </div>
-              <div className="form-group">
+              <div className="input-group small">
                 <label htmlFor="uf">UF</label>
                 <input
                   id="uf"
                   type="text"
                   value={uf}
                   onChange={(e) => setUf(e.target.value.toUpperCase())}
-                  placeholder="SP"
+                  placeholder="UF"
                   maxLength={3}
                   required
-                  className="input-short"
                 />
               </div>
-              <div className="form-group">
+              <div className="input-group">
                 <label htmlFor="status">Status</label>
                 <select
                   id="status"
@@ -383,129 +400,141 @@ const App: React.FC = () => {
                   ))}
                 </select>
               </div>
-              <div className="form-actions">
-                  {status === 'Concluído' && (
-                    <label className="checkbox-pill">
-                      <input
-                        type="checkbox"
-                        checked={isPresencial}
-                        onChange={(e) => setIsPresencial(e.target.checked)}
-                      />
-                      <span>Presencial</span>
-                    </label>
-                  )}
-                  <button type="submit" className="btn-primary">
-                    <span className="plus-icon">+</span> Adicionar
-                  </button>
-              </div>
+            </div>
+            
+            <div className="form-footer">
+              {status === 'Concluído' && (
+                <label className="checkbox-modern">
+                  <input
+                    type="checkbox"
+                    checked={isPresencial}
+                    onChange={(e) => setIsPresencial(e.target.checked)}
+                  />
+                  <span className="checkmark"></span>
+                  Atendimento Presencial
+                </label>
+              )}
+              <button type="submit" className="btn-submit">
+                Adicionar
+              </button>
             </div>
           </form>
         </div>
       </section>
 
-      <section className="list-controls">
-        <div className="search-wrapper">
-           <span className="search-icon">🔍</span>
-           <input 
-            type="text"
-            placeholder="Buscar chamado..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      <section className="feed-section">
+        <div className="controls-bar">
+          <div className="search-box">
+             <span className="icon">🔎</span>
+             <input 
+              type="text"
+              placeholder="Pesquisar WO..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          
+          <div className="filter-pills">
+              {filterOptions.map(option => (
+                <button
+                  key={option}
+                  className={`pill ${filterStatus === option ? 'active' : ''}`}
+                  onClick={() => setFilterStatus(option)}
+                >
+                  {option === 'All' ? 'Todos' : option}
+                </button>
+              ))}
+          </div>
         </div>
         
-        <div className="filter-scroll">
-            {filterOptions.map(option => (
-              <button
-                key={option}
-                className={`filter-pill ${filterStatus === option ? 'active' : ''}`}
-                onClick={() => setFilterStatus(option)}
-              >
-                {option === 'All' ? 'Todos' : option}
-              </button>
-            ))}
-        </div>
-      </section>
-      
-      <input 
-        type="file" 
-        ref={fileInputRef} 
-        onChange={handleFileChange} 
-        accept="application/json" 
-        style={{ display: 'none' }} 
-      />
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handleFileChange} 
+          accept="application/json" 
+          style={{ display: 'none' }} 
+        />
 
-      <section className="ticket-feed">
-        {tickets.length > 0 ? (
-          sortedDateKeys.length > 0 ? (
-            sortedDateKeys.map(dateKey => (
-              <div key={dateKey} className="date-group fade-in">
-                <h4 className="date-header">{formatDateHeader(dateKey)}</h4>
-                <div className="ticket-list">
-                {groupedTickets[dateKey].map(ticket => (
-                  <div key={ticket.id} className={`ticket-card status-border-${ticket.status}`}>
-                    {editingTicketId === ticket.id ? (
-                      <div className="ticket-edit-form">
-                        <input className="edit-input" type="text" value={editFormData.wo} onChange={e => setEditFormData({...editFormData, wo: e.target.value.toUpperCase()})} />
-                        <input className="edit-input w-small" type="text" value={editFormData.uf} maxLength={3} onChange={e => setEditFormData({...editFormData, uf: e.target.value.toUpperCase()})} />
-                        <select className="edit-input" value={editFormData.status} onChange={e => setEditFormData({...editFormData, status: e.target.value as Ticket['status']})}>
-                            {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                        </select>
-                         {editFormData.status === 'Concluído' && (
-                            <label className="checkbox-simple">
-                                <input type="checkbox" checked={editFormData.isPresencial} onChange={e => setEditFormData({...editFormData, isPresencial: e.target.checked})} /> Presencial
-                            </label>
-                        )}
-                        <div className="edit-buttons">
-                           <button onClick={() => handleSave(ticket.id)} className="btn-icon save">✓</button>
-                           <button onClick={handleCancelEdit} className="btn-icon cancel">✕</button>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="ticket-info">
-                          <div className="ticket-main">
-                            <span className="ticket-wo">{ticket.wo}</span>
-                            <span className="ticket-uf">{ticket.uf}</span>
-                          </div>
-                          <div className="ticket-meta">
-                             <span className={`status-badge ${ticket.status}`}>
-                                {ticket.status}
-                             </span>
-                             {ticket.isPresencial && <span className="tag-presencial">Presencial</span>}
-                             <span className="ticket-time">
-                                {parseTimestamp(ticket.timestamp).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
-                             </span>
-                          </div>
-                        </div>
-                        
-                        <div className="ticket-actions">
-                            <button onClick={() => toggleActionsMenu(ticket.id)} className="btn-more">⋮</button>
-                            {actionsMenuId === ticket.id && (
-                              <div className="actions-dropdown">
-                                <button onClick={() => handleCopyWo(ticket.wo)}>Copiar</button>
-                                <button onClick={() => handleEdit(ticket)}>Editar</button>
-                                <button onClick={() => handleDelete(ticket.id)} className="danger">Excluir</button>
-                              </div>
-                            )}
-                        </div>
-                      </>
-                    )}
+        <div className="tickets-feed">
+          {tickets.length > 0 ? (
+            sortedDateKeys.length > 0 ? (
+              sortedDateKeys.map(dateKey => (
+                <div key={dateKey} className="day-group fade-in">
+                  <div className="day-header">
+                    <span className="day-title">{formatDateHeader(dateKey)}</span>
+                    <span className="day-line"></span>
                   </div>
-                ))}
+                  <div className="day-list">
+                  {groupedTickets[dateKey].map(ticket => (
+                    <div key={ticket.id} className="ticket-card">
+                      {editingTicketId === ticket.id ? (
+                        <div className="edit-mode">
+                          <input className="edit-input" type="text" value={editFormData.wo} onChange={e => setEditFormData({...editFormData, wo: e.target.value.toUpperCase()})} />
+                          <input className="edit-input small" type="text" value={editFormData.uf} maxLength={3} onChange={e => setEditFormData({...editFormData, uf: e.target.value.toUpperCase()})} />
+                          <select className="edit-input" value={editFormData.status} onChange={e => setEditFormData({...editFormData, status: e.target.value as Ticket['status']})}>
+                              {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                          </select>
+                           {editFormData.status === 'Concluído' && (
+                              <label className="checkbox-simple">
+                                  <input type="checkbox" checked={editFormData.isPresencial} onChange={e => setEditFormData({...editFormData, isPresencial: e.target.checked})} /> Presencial
+                              </label>
+                          )}
+                          <div className="edit-actions">
+                             <button onClick={() => handleSave(ticket.id)} className="btn-icon save" title="Salvar">✓</button>
+                             <button onClick={handleCancelEdit} className="btn-icon cancel" title="Cancelar">✕</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="card-left">
+                             <div className={`status-dot ${ticket.status}`}></div>
+                             <div>
+                                <div className="ticket-wo">{ticket.wo}</div>
+                                <div className="ticket-time">
+                                  {parseTimestamp(ticket.timestamp).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
+                                  <span className="dot-sep">•</span>
+                                  {ticket.uf}
+                                </div>
+                             </div>
+                          </div>
+
+                          <div className="card-right">
+                             <div className="tags">
+                                {ticket.isPresencial && <span className="tag presencial">Presencial</span>}
+                                <span className={`tag status ${ticket.status}`}>{ticket.status}</span>
+                             </div>
+                             
+                             <div className="menu-wrapper">
+                                <button onClick={() => toggleActionsMenu(ticket.id)} className="btn-more">•••</button>
+                                {actionsMenuId === ticket.id && (
+                                  <div className="dropdown-menu">
+                                    <button onClick={() => handleCopyWo(ticket.wo)}>Copiar WO</button>
+                                    <button onClick={() => handleEdit(ticket)}>Editar</button>
+                                    <button onClick={() => handleDelete(ticket.id)} className="danger">Excluir</button>
+                                  </div>
+                                )}
+                             </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                  </div>
                 </div>
-              </div>
-            ))
+              ))
+            ) : (
+               <div className="empty-state">
+                  <div className="empty-icon">🔍</div>
+                  <p>Nenhum chamado encontrado com este filtro.</p>
+               </div>
+            )
           ) : (
-             <div className="empty-state">
-                <p>Nenhum resultado para o filtro.</p>
-             </div>
-          )
-        ) : (
-          <div className="empty-state">
-            <p>Sua lista está vazia. Adicione o primeiro chamado acima!</p>
-          </div>
-        )}
+            <div className="empty-state">
+              <div className="empty-icon">📝</div>
+              <p>Sua lista está vazia. Adicione o primeiro chamado acima!</p>
+            </div>
+          )}
+        </div>
       </section>
       
       <div className={`toast ${toast.type} ${toast.message ? 'show' : ''}`}>
