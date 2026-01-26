@@ -184,7 +184,7 @@ const App: React.FC = () => {
     setActionsMenuId(null);
   };
   
-  constPvhandleEdit = (ticket: Ticket) => {
+  const handleEdit = (ticket: Ticket) => {
     setEditingTicketId(ticket.id);
     setEditFormData({ wo: ticket.wo, uf: ticket.uf, status: ticket.status, isPresencial: ticket.isPresencial || false });
     setActionsMenuId(null);
