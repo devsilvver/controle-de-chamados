@@ -1,7 +1,7 @@
 import React, { useState, useEffect, FormEvent, useRef, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 
-// Define a estrutura de um chamado
+// --- Interfaces ---
 interface Ticket {
   id: number;
   wo: string;
@@ -16,9 +16,22 @@ type FilterType = Ticket['status'] | 'All' | 'Presenciais';
 
 const DAILY_GOAL = 8;
 
+// --- Componentes Visuais ---
+
+// Ícones SVG para não depender de bibliotecas externas
+const Icons = {
+  Copy: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>,
+  Edit: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>,
+  Trash: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>,
+  Check: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>,
+  Close: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>,
+  Trophy: () => <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#FFD700" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 21h8m-4-9v9m0-9a5 5 0 0 1-5-5V3h10v4a5 5 0 0 1-5 5zm-9-5a9 9 0 0 1 9-9 9 9 0 0 1 9 9"/></svg>
+};
+
 const Confetti: React.FC = () => {
-  const confettiCount = 150;
-  const colors = ['#a864fd', '#29cdff', '#78ff44', '#ff718d', '#fdff6a'];
+  // Aumentei a quantidade para ser mais impactante
+  const confettiCount = 200;
+  const colors = ['#a864fd', '#29cdff', '#78ff44', '#ff718d', '#fdff6a', '#FFD700'];
 
   return (
     <div className="confetti-container" aria-hidden="true">
@@ -26,8 +39,8 @@ const Confetti: React.FC = () => {
         const style: React.CSSProperties = {
           left: `${Math.random() * 100}%`,
           backgroundColor: colors[Math.floor(Math.random() * colors.length)],
-          animationDuration: `${Math.random() * 3 + 4}s`,
-          animationDelay: `${Math.random() * 5}s`,
+          animationDuration: `${Math.random() * 2 + 3}s`, // Mais rápido
+          animationDelay: `${Math.random() * 2}s`,
         };
         const className = `confetto confetto-shape-${index % 3}`;
         return <div key={index} className={className} style={style}></div>;
@@ -36,6 +49,7 @@ const Confetti: React.FC = () => {
   );
 };
 
+// --- Funções Auxiliares ---
 const parseTimestamp = (timestamp: string): Date => {
   if (timestamp.includes('T') && timestamp.includes('Z')) {
     return new Date(timestamp);
@@ -48,10 +62,11 @@ const parseTimestamp = (timestamp: string): Date => {
   return new Date(timestamp);
 };
 
-
+// --- Componente Principal ---
 const App: React.FC = () => {
   const statusOptions: Ticket['status'][] = ['Concluído', 'Diagnóstico', 'Trabalhado', 'Cancelado'];
 
+  // Estados principais
   const [tickets, setTickets] = useState<Ticket[]>(() => {
     try {
       const savedTicketsRaw = localStorage.getItem('tickets');
@@ -59,6 +74,7 @@ const App: React.FC = () => {
       
       let savedTickets = JSON.parse(savedTicketsRaw);
 
+      // Migração de dados legados
       if (savedTickets.length > 0 && savedTickets.some((t: any) => 'resolutionType' in t)) {
         return savedTickets.map((ticket: any) => {
           const { resolutionType, ...rest } = ticket;
@@ -76,24 +92,31 @@ const App: React.FC = () => {
     }
   });
 
+  // Estados de Formulário
   const [wo, setWo] = useState<string>('');
   const [uf, setUf] = useState<string>('');
   const [status, setStatus] = useState<Ticket['status']>('Concluído');
   const [isPresencial, setIsPresencial] = useState<boolean>(false);
   
+  // Filtros e UI
   const [filterStatus, setFilterStatus] = useState<FilterType>('All');
-  
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [toast, setToast] = useState<{ message: string; type: ToastType }>({ message: '', type: 'success' });
+  const [isDataMenuOpen, setIsDataMenuOpen] = useState<boolean>(false);
+  
+  // Edição
   const [editingTicketId, setEditingTicketId] = useState<number | null>(null);
   const [editFormData, setEditFormData] = useState<Omit<Ticket, 'id' | 'timestamp'>>({ wo: '', uf: '', status: 'Concluído', isPresencial: false });
-  const [toast, setToast] = useState<{ message: string; type: ToastType }>({ message: '', type: 'success' });
-  const [actionsMenuId, setActionsMenuId] = useState<number | null>(null);
-  const [isDataMenuOpen, setIsDataMenuOpen] = useState<boolean>(false);
-  const [showConfetti, setShowConfetti] = useState<boolean>(false);
 
+  // Modais Customizados
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean, ticketId: number | null }>({ isOpen: false, ticketId: null });
+  const [celebrationModal, setCelebrationModal] = useState<boolean>(false);
+
+  // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dataMenuRef = useRef<HTMLDivElement>(null);
   
+  // Cálculos
   const todaysCount = useMemo(() => tickets.filter(ticket => {
     if (!ticket.timestamp) return false;
     const ticketDate = parseTimestamp(ticket.timestamp);
@@ -107,19 +130,23 @@ const App: React.FC = () => {
 
   const prevTodaysCount = useRef(todaysCount);
 
+  // Persistência
   useEffect(() => {
     localStorage.setItem('tickets', JSON.stringify(tickets));
   }, [tickets]);
   
+  // Efeito de Meta Batida
   useEffect(() => {
     if (prevTodaysCount.current < DAILY_GOAL && todaysCount >= DAILY_GOAL) {
-      setShowConfetti(true);
-      const timer = setTimeout(() => setShowConfetti(false), 7000);
+      setCelebrationModal(true);
+      // Auto fechar após 6 segundos se o usuário não fechar
+      const timer = setTimeout(() => setCelebrationModal(false), 6000);
       return () => clearTimeout(timer);
     }
     prevTodaysCount.current = todaysCount;
   }, [todaysCount]);
 
+  // Toast Timer
   useEffect(() => {
     if (toast.message) {
       const timer = setTimeout(() => {
@@ -129,30 +156,21 @@ const App: React.FC = () => {
     }
   }, [toast]);
 
+  // Click Outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
         const target = event.target as Node;
-
-        // Fecha menu de configurações
         if (isDataMenuOpen && dataMenuRef.current && !dataMenuRef.current.contains(target)) {
             setIsDataMenuOpen(false);
         }
-
-        // Fecha menu de ações da linha
-        if (actionsMenuId !== null) {
-            const isDropdown = (target as Element).closest('.dropdown-menu');
-            const isTrigger = (target as Element).closest('.btn-more');
-            if (!isDropdown && !isTrigger) {
-                setActionsMenuId(null);
-            }
-        }
     };
-    
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
         document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isDataMenuOpen, actionsMenuId]);
+  }, [isDataMenuOpen]);
+
+  // --- Handlers ---
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -176,18 +194,17 @@ const App: React.FC = () => {
     setIsPresencial(false);
   };
 
-  const handleDelete = (id: number) => {
-    if (window.confirm('Tem certeza que deseja excluir este chamado?')) {
-      setTickets(prevTickets => prevTickets.filter(ticket => ticket.id !== id));
-      setToast({ message: 'Chamado excluído.', type: 'info' });
+  const confirmDelete = () => {
+    if (deleteConfirmation.ticketId) {
+        setTickets(prevTickets => prevTickets.filter(ticket => ticket.id !== deleteConfirmation.ticketId));
+        setToast({ message: 'Chamado excluído.', type: 'info' });
     }
-    setActionsMenuId(null);
+    setDeleteConfirmation({ isOpen: false, ticketId: null });
   };
   
   const handleEdit = (ticket: Ticket) => {
     setEditingTicketId(ticket.id);
     setEditFormData({ wo: ticket.wo, uf: ticket.uf, status: ticket.status, isPresencial: ticket.isPresencial || false });
-    setActionsMenuId(null);
   };
 
   const handleCancelEdit = () => {
@@ -217,11 +234,6 @@ const App: React.FC = () => {
     }).catch(err => {
       setToast({ message: 'Erro ao copiar.', type: 'danger'});
     });
-    setActionsMenuId(null);
-  };
-
-  const toggleActionsMenu = (id: number) => {
-    setActionsMenuId(prevId => (prevId === id ? null : id));
   };
   
   const handleExport = () => {
@@ -255,10 +267,8 @@ const App: React.FC = () => {
       try {
         const text = e.target?.result;
         if (typeof text !== 'string') throw new Error('Erro de leitura');
-        
         const importedTickets = JSON.parse(text);
         if (!Array.isArray(importedTickets)) throw new Error('Formato inválido');
-
         if (window.confirm('Isso substituirá seus dados atuais. Continuar?')) {
           setTickets(importedTickets);
           setToast({ message: 'Dados importados!', type: 'success' });
@@ -272,18 +282,14 @@ const App: React.FC = () => {
     reader.readAsText(file);
   };
 
+  // Filtragem e Agrupamento
   const filterOptions: FilterType[] = ['All', 'Presenciais', ...statusOptions];
 
   const filteredTickets = tickets.filter(ticket => {
     let statusMatch = true;
-
-    if (filterStatus === 'All') {
-        statusMatch = true;
-    } else if (filterStatus === 'Presenciais') {
-        statusMatch = ticket.isPresencial === true;
-    } else {
-        statusMatch = ticket.status === filterStatus;
-    }
+    if (filterStatus === 'All') statusMatch = true;
+    else if (filterStatus === 'Presenciais') statusMatch = ticket.isPresencial === true;
+    else statusMatch = ticket.status === filterStatus;
 
     const searchMatch = ticket.wo.toLowerCase().includes(searchTerm.toLowerCase());
     return statusMatch && searchMatch;
@@ -295,10 +301,7 @@ const App: React.FC = () => {
     if (isNaN(ticketDate.getTime())) return acc;
     
     const dateKey = new Date(ticketDate.getFullYear(), ticketDate.getMonth(), ticketDate.getDate()).toISOString();
-
-    if (!acc[dateKey]) {
-      acc[dateKey] = [];
-    }
+    if (!acc[dateKey]) acc[dateKey] = [];
     acc[dateKey].push(ticket);
     return acc;
   }, {} as Record<string, Ticket[]>);
@@ -322,7 +325,33 @@ const App: React.FC = () => {
 
   return (
     <main>
-      {showConfetti && <Confetti />}
+      {/* --- MODAL DE CELEBRAÇÃO --- */}
+      {celebrationModal && (
+        <div className="modal-overlay celebration-overlay">
+            <Confetti />
+            <div className="celebration-content pop-in">
+                <div className="trophy-anim"><Icons.Trophy /></div>
+                <h2>META BATIDA!</h2>
+                <p>Excelente trabalho! Você atingiu {DAILY_GOAL} chamados hoje.</p>
+                <button className="btn-celebrate" onClick={() => setCelebrationModal(false)}>Continuar</button>
+            </div>
+        </div>
+      )}
+
+      {/* --- MODAL DE EXCLUSÃO --- */}
+      {deleteConfirmation.isOpen && (
+        <div className="modal-overlay fade-in">
+            <div className="modal-content scale-up">
+                <h3>Excluir Chamado?</h3>
+                <p>Tem certeza que deseja remover este registro? Essa ação não pode ser desfeita.</p>
+                <div className="modal-actions">
+                    <button className="btn-secondary" onClick={() => setDeleteConfirmation({ isOpen: false, ticketId: null })}>Cancelar</button>
+                    <button className="btn-danger" onClick={confirmDelete}>Sim, Excluir</button>
+                </div>
+            </div>
+        </div>
+      )}
+
       <header>
         <div className="header-container">
           <div className="logo-area">
@@ -496,8 +525,8 @@ const App: React.FC = () => {
                               </label>
                           )}
                           <div className="edit-actions">
-                             <button onClick={() => handleSave(ticket.id)} className="btn-icon save" title="Salvar">✓</button>
-                             <button onClick={handleCancelEdit} className="btn-icon cancel" title="Cancelar">✕</button>
+                             <button onClick={() => handleSave(ticket.id)} className="btn-icon save" title="Salvar"><Icons.Check /></button>
+                             <button onClick={handleCancelEdit} className="btn-icon cancel" title="Cancelar"><Icons.Close /></button>
                           </div>
                         </div>
                       ) : (
@@ -523,23 +552,16 @@ const App: React.FC = () => {
                                 <span className={`tag status ${ticket.status}`}>{ticket.status}</span>
                              </div>
                              
-                             <div className="menu-wrapper">
-                                <button 
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        toggleActionsMenu(ticket.id);
-                                    }} 
-                                    className="btn-more"
-                                >
-                                    •••
+                             <div className="actions-direct">
+                                <button onClick={() => handleCopyWo(ticket.wo)} className="action-btn" title="Copiar WO">
+                                    <Icons.Copy />
                                 </button>
-                                {actionsMenuId === ticket.id && (
-                                  <div className="dropdown-menu">
-                                    <button onClick={() => handleCopyWo(ticket.wo)}>Copiar WO</button>
-                                    <button onClick={() => handleEdit(ticket)}>Editar</button>
-                                    <button onClick={() => handleDelete(ticket.id)} className="danger">Excluir</button>
-                                  </div>
-                                )}
+                                <button onClick={() => handleEdit(ticket)} className="action-btn" title="Editar">
+                                    <Icons.Edit />
+                                </button>
+                                <button onClick={() => setDeleteConfirmation({ isOpen: true, ticketId: ticket.id })} className="action-btn danger" title="Excluir">
+                                    <Icons.Trash />
+                                </button>
                              </div>
                           </div>
                         </>
