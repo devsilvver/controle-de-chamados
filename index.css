@@ -71,12 +71,18 @@ body {
   -webkit-font-smoothing: antialiased;
   padding: 1rem;
   overflow-y: scroll;
-  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Transições suaves */
-.card, .year-box, .ticket-card, input, select, .btn-icon-only, .pill, .modal-content, .dropdown-menu {
-  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+/* Transição suave UNIFICADA (Igual ao Chat Universal) */
+body, 
+.card, .year-box, .ticket-card, 
+input, select, .btn-icon-only, .pill, 
+.modal-content, .dropdown-menu,
+h1, h2, h3, span, p, div, label {
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 #root { max-width: 1200px; margin: 0 auto; padding-bottom: 3rem; }
