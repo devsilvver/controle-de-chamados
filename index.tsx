@@ -1,6 +1,9 @@
 import React, { useState, useEffect, FormEvent, useRef, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 
+// Declaração para o TypeScript reconhecer a variável injetada pelo Vite
+declare const __BUILD_DATE__: string;
+
 // --- Interfaces ---
 interface Ticket {
   id: number;
@@ -656,6 +659,10 @@ const App: React.FC = () => {
         </div>
       </section>
       
+      <footer style={{ textAlign: 'center', padding: '2rem 0', color: 'var(--text-secondary)', fontSize: '0.85rem', opacity: 0.8 }}>
+        <p>Última atualização: {__BUILD_DATE__}</p>
+      </footer>
+
       <div className={`toast ${toast.type} ${toast.message ? 'show' : ''}`}>
         {toast.message}
       </div>
