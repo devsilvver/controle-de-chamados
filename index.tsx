@@ -92,11 +92,17 @@ const formatDateHeader = (dateKey: string): string => {
     return formatted.charAt(0).toUpperCase() + formatted.slice(1);
 };
 
+// Converte data UTC/ISO para formato aceito pelo input datetime-local (YYYY-MM-DDThh:mm) considerando fuso local
+const toLocalISOString = (isoString: string) => {
+    const date = new Date(isoString);
+    const offset = date.getTimezoneOffset() * 60000;
+    return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+};
+
 // --- Componente Principal ---
 const App: React.FC = () => {
   const statusOptions: Ticket['status'][] = ['Concluído', 'Diagnóstico', 'Trabalhado', 'Cancelado'];
 
-  // Estado do Tema
   const [theme, setTheme] = useState<ThemeType>(() => {
     try {
       const savedTheme = localStorage.getItem('theme');
@@ -144,7 +150,8 @@ const App: React.FC = () => {
   const [isDataMenuOpen, setIsDataMenuOpen] = useState<boolean>(false);
   
   const [editingTicketId, setEditingTicketId] = useState<number | null>(null);
-  const [editFormData, setEditFormData] = useState<Omit<Ticket, 'id' | 'timestamp'>>({ wo: '', uf: '', status: 'Concluído', isPresencial: false });
+  // Agora inclui timestamp
+  const [editFormData, setEditFormData] = useState<Omit<Ticket, 'id'>>({ wo: '', uf: '', status: 'Concluído', isPresencial: false, timestamp: '' });
 
   const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean, ticketId: number | null }>({ isOpen: false, ticketId: null });
   const [celebrationModal, setCelebrationModal] = useState<boolean>(false);
@@ -165,7 +172,6 @@ const App: React.FC = () => {
 
   const prevTodaysCount = useRef(todaysCount);
 
-  // Efeito para aplicar o tema no body
   useEffect(() => {
     document.body.className = `${theme}-theme`;
     localStorage.setItem('theme', theme);
@@ -242,7 +248,13 @@ const App: React.FC = () => {
   
   const handleEdit = (ticket: Ticket) => {
     setEditingTicketId(ticket.id);
-    setEditFormData({ wo: ticket.wo, uf: ticket.uf, status: ticket.status, isPresencial: ticket.isPresencial || false });
+    setEditFormData({ 
+        wo: ticket.wo, 
+        uf: ticket.uf, 
+        status: ticket.status, 
+        isPresencial: ticket.isPresencial || false,
+        timestamp: ticket.timestamp // Carrega a data original
+    });
   };
 
   const handleCancelEdit = () => {
@@ -253,7 +265,7 @@ const App: React.FC = () => {
     setTickets(prevTickets =>
       prevTickets.map(ticket => {
         if (ticket.id === id) {
-          const finalData: Partial<Omit<Ticket, 'id' | 'timestamp'>> = { ...editFormData };
+          const finalData: Partial<Omit<Ticket, 'id'>> = { ...editFormData };
           if (finalData.status !== 'Concluído' || !finalData.isPresencial) {
             delete finalData.isPresencial;
           }
@@ -401,6 +413,11 @@ const App: React.FC = () => {
              </div>
           </div>
           <div className="header-actions" ref={dataMenuRef}>
+            {/* BUILD DATE AGORA NO HEADER */}
+            <span className="build-date" title="Data da última atualização">
+               v. {__BUILD_DATE__}
+            </span>
+
             <button 
                 className="btn-icon-only" 
                 onClick={toggleTheme}
@@ -581,20 +598,34 @@ const App: React.FC = () => {
                                                     <div key={ticket.id} className="ticket-card">
                                                         {editingTicketId === ticket.id ? (
                                                             <div className="edit-mode">
-                                                            <input className="edit-input" type="text" value={editFormData.wo} onChange={e => setEditFormData({...editFormData, wo: e.target.value.toUpperCase()})} />
-                                                            <input className="edit-input small" type="text" value={editFormData.uf} maxLength={3} onChange={e => setEditFormData({...editFormData, uf: e.target.value.toUpperCase()})} />
-                                                            <select className="edit-input" value={editFormData.status} onChange={e => setEditFormData({...editFormData, status: e.target.value as Ticket['status']})}>
-                                                                {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                                            </select>
-                                                            {editFormData.status === 'Concluído' && (
-                                                                <label className="checkbox-simple">
-                                                                    <input type="checkbox" checked={editFormData.isPresencial} onChange={e => setEditFormData({...editFormData, isPresencial: e.target.checked})} /> Presencial
-                                                                </label>
-                                                            )}
-                                                            <div className="edit-actions">
-                                                                <button onClick={() => handleSave(ticket.id)} className="btn-icon save" title="Salvar"><Icons.Check /></button>
-                                                                <button onClick={handleCancelEdit} className="btn-icon cancel" title="Cancelar"><Icons.Close /></button>
-                                                            </div>
+                                                                <input className="edit-input" type="text" value={editFormData.wo} onChange={e => setEditFormData({...editFormData, wo: e.target.value.toUpperCase()})} />
+                                                                <input className="edit-input small" type="text" value={editFormData.uf} maxLength={3} onChange={e => setEditFormData({...editFormData, uf: e.target.value.toUpperCase()})} />
+                                                                <select className="edit-input" value={editFormData.status} onChange={e => setEditFormData({...editFormData, status: e.target.value as Ticket['status']})}>
+                                                                    {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                                                </select>
+                                                                
+                                                                {/* CAMPO DE EDIÇÃO DE DATA */}
+                                                                <input 
+                                                                    type="datetime-local"
+                                                                    className="edit-input date-edit"
+                                                                    value={toLocalISOString(editFormData.timestamp)}
+                                                                    onChange={(e) => {
+                                                                        const date = new Date(e.target.value);
+                                                                        if(!isNaN(date.getTime())) {
+                                                                            setEditFormData({...editFormData, timestamp: date.toISOString()});
+                                                                        }
+                                                                    }}
+                                                                />
+
+                                                                {editFormData.status === 'Concluído' && (
+                                                                    <label className="checkbox-simple">
+                                                                        <input type="checkbox" checked={editFormData.isPresencial} onChange={e => setEditFormData({...editFormData, isPresencial: e.target.checked})} /> Presencial
+                                                                    </label>
+                                                                )}
+                                                                <div className="edit-actions">
+                                                                    <button onClick={() => handleSave(ticket.id)} className="btn-icon save" title="Salvar"><Icons.Check /></button>
+                                                                    <button onClick={handleCancelEdit} className="btn-icon cancel" title="Cancelar"><Icons.Close /></button>
+                                                                </div>
                                                             </div>
                                                         ) : (
                                                             <>
@@ -659,10 +690,6 @@ const App: React.FC = () => {
         </div>
       </section>
       
-      <footer style={{ textAlign: 'center', padding: '2rem 0', color: 'var(--text-secondary)', fontSize: '0.85rem', opacity: 0.8 }}>
-        <p>Última atualização: {__BUILD_DATE__}</p>
-      </footer>
-
       <div className={`toast ${toast.type} ${toast.message ? 'show' : ''}`}>
         {toast.message}
       </div>

@@ -71,11 +71,9 @@ body {
   -webkit-font-smoothing: antialiased;
   padding: 1rem;
   overflow-y: scroll;
-  /* Transição suave e unificada no body, igual ao chat-universal */
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Transições específicas para containers que mudam de cor */
 .card, .year-box, .ticket-card, input, select, .btn-icon-only, .pill, .modal-content, .dropdown-menu {
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
@@ -85,7 +83,17 @@ body {
 /* HEADER */
 header { margin-bottom: 2rem; padding-top: 1rem; }
 .header-container { display: flex; justify-content: space-between; align-items: center; }
-.header-actions { position: relative; display: flex; gap: 0.75rem; }
+.header-actions { position: relative; display: flex; gap: 0.75rem; align-items: center; }
+
+/* Nova classe para a data do build */
+.build-date {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-right: 0.75rem;
+    text-align: right;
+    line-height: 1.2;
+    white-space: nowrap;
+}
 
 .logo-area { display: flex; align-items: center; gap: 1rem; }
 .logo-icon { 
@@ -275,9 +283,10 @@ h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
 .dropdown-menu button:hover { background: var(--bg-hover); }
 
 /* Edit Mode */
-.edit-mode { display: flex; gap: 0.75rem; width: 100%; align-items: center; }
+.edit-mode { display: flex; gap: 0.75rem; width: 100%; align-items: center; flex-wrap: wrap; }
 .edit-input { padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 1rem; background: var(--bg-input); color: var(--text-primary); }
 .edit-input.small { width: 70px; }
+.edit-input.date-edit { font-size: 0.9rem; width: auto; }
 .edit-actions { display: flex; gap: 0.5rem; }
 .btn-icon { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; cursor: pointer; background: var(--bg-card); color: var(--text-primary); }
 .btn-icon:hover { transform: scale(1.1); }
@@ -343,6 +352,7 @@ h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
   .controls-bar { flex-direction: column; align-items: stretch; }
   .search-group { flex-direction: column; }
   .card-left { gap: 0.75rem; }
+  .build-date { display: none; /* Esconder em telas menores se faltar espaço */ }
 }
 
 @media (max-width: 600px) {
@@ -353,4 +363,6 @@ h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
   .actions-direct { margin-left: 0; padding-left: 0; border-left: none; width: 100%; justify-content: flex-end; border-top: 1px solid var(--border-color); padding-top: 1rem; }
   .goal-card { flex-direction: column; align-items: stretch; gap: 0.75rem; }
   .goal-visual { width: 100%; }
+  .edit-mode { gap: 0.5rem; }
+  .edit-input.date-edit { width: 100%; }
 }
