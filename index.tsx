@@ -1,6 +1,6 @@
 import React, { useState, useEffect, FormEvent, useRef, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
-import './index.css'; // <--- ESTA LINHA FALTAVA E É ESSENCIAL PARA O ESTILO FUNCIONAR
+import './index.css';
 
 // Declaração para o TypeScript reconhecer a variável injetada pelo Vite
 declare const __BUILD_DATE__: string;

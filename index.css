@@ -1,5 +1,5 @@
 :root, .light-theme {
-  /* --- Tema Claro (Padrão) --- */
+  /* --- Tema Claro --- */
   --bg-app: #f8fafc;
   --bg-card: #ffffff;
   --bg-input: #ffffff;
@@ -62,7 +62,28 @@
   --year-border: #334155;
 }
 
+/* RESET */
 * { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* === TRANSIÇÃO FLUIDA DE ALTA PERFORMANCE === */
+/* Animamos apenas elementos estruturais, evitando lag */
+body, 
+.card, 
+.year-box, 
+.ticket-card, 
+.btn-icon-only, 
+.action-btn,
+.pill, 
+input, 
+select, 
+.modal-content,
+.dropdown-menu,
+.toast {
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -71,18 +92,6 @@ body {
   -webkit-font-smoothing: antialiased;
   padding: 1rem;
   overflow-y: scroll;
-}
-
-/* Transição suave UNIFICADA (Igual ao Chat Universal) */
-body, 
-.card, .year-box, .ticket-card, 
-input, select, .btn-icon-only, .pill, 
-.modal-content, .dropdown-menu,
-h1, h2, h3, span, p, div, label {
-  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 #root { max-width: 1200px; margin: 0 auto; padding-bottom: 3rem; }
