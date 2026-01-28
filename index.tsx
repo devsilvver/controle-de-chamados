@@ -1,5 +1,6 @@
 import React, { useState, useEffect, FormEvent, useRef, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
+import './index.css'; // <--- ESTA LINHA FALTAVA E É ESSENCIAL PARA O ESTILO FUNCIONAR
 
 // Declaração para o TypeScript reconhecer a variável injetada pelo Vite
 declare const __BUILD_DATE__: string;
@@ -196,7 +197,7 @@ const App: React.FC = () => {
 
   // 4. Limpa toast
   useEffect(() => {
-    if (toast.message && !toast.message.includes('Nova atualização')) { // Não limpa o toast de update automaticamente
+    if (toast.message && !toast.message.includes('Nova atualização')) {
       const timer = setTimeout(() => {
         setToast({ message: '', type: 'success' });
       }, 3000);
@@ -243,7 +244,7 @@ const App: React.FC = () => {
     };
 
     checkInterval = setInterval(checkVersion, 60000); // 60 segundos
-    checkVersion(); // Checa ao iniciar
+    checkVersion();
 
     return () => clearInterval(checkInterval);
   }, []);
@@ -726,7 +727,6 @@ const App: React.FC = () => {
         </div>
       </section>
       
-      {/* TOAST CLICÁVEL PARA UPDATE */}
       <div 
         className={`toast ${toast.type} ${toast.message ? 'show' : ''}`}
         onClick={() => {
