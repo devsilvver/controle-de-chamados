@@ -162,9 +162,9 @@ const App: React.FC = () => {
 
   const prevTodaysCount = useRef(todaysCount);
 
-  // Efeito para aplicar o tema
+  // Efeito para aplicar o tema no body
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
+    document.body.className = `${theme}-theme`;
     localStorage.setItem('theme', theme);
   }, [theme]);
 

@@ -1,4 +1,4 @@
-:root {
+:root, .light-theme {
   /* --- Tema Claro (Padrão) --- */
   --bg-app: #f8fafc;
   --bg-card: #ffffff;
@@ -32,21 +32,21 @@
   --year-border: #f1f5f9;
 }
 
-/* --- Tema Escuro --- */
-[data-theme="dark"] {
-  --bg-app: #0f172a;
-  --bg-card: #1e293b;
-  --bg-input: #0f172a;
-  --bg-hover: #334155;
+.dark-theme {
+  /* --- Tema Escuro --- */
+  --bg-app: #0f172a;      /* Slate 900 */
+  --bg-card: #1e293b;     /* Slate 800 */
+  --bg-input: #0f172a;    /* Input mais escuro */
+  --bg-hover: #334155;    /* Slate 700 */
   --bg-ticket: #0f172a;
 
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
+  --text-primary: #f1f5f9; /* Slate 100 */
+  --text-secondary: #94a3b8; /* Slate 400 */
   --text-inverse: #0f172a;
 
-  --primary: #6366f1;
+  --primary: #6366f1;     /* Indigo 500 */
   --primary-hover: #818cf8;
-  --border-color: #334155;
+  --border-color: #334155; /* Slate 700 */
 
   --shadow-soft: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.3);
   --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.3);
@@ -62,13 +62,7 @@
   --year-border: #334155;
 }
 
-/* RESET OTIMIZADO - Sem transição universal pesada */
 * { box-sizing: border-box; margin: 0; padding: 0; }
-
-/* Transição suave APENAS nos elementos estruturais */
-body, .card, .year-box, .ticket-card, input, select, .btn-icon-only, .pill, .modal-content, .dropdown-menu {
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-}
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -77,6 +71,13 @@ body {
   -webkit-font-smoothing: antialiased;
   padding: 1rem;
   overflow-y: scroll;
+  /* Transição suave e unificada no body, igual ao chat-universal */
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Transições específicas para containers que mudam de cor */
+.card, .year-box, .ticket-card, input, select, .btn-icon-only, .pill, .modal-content, .dropdown-menu {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
 
 #root { max-width: 1200px; margin: 0 auto; padding-bottom: 3rem; }
@@ -139,8 +140,6 @@ h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
 .input-group input, .input-group select {
   width: 100%; padding: 0.75rem 1rem; font-size: 1rem; border-radius: var(--radius-md);
   border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-primary);
-  /* Transição de focus apenas */
-  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.15s;
 }
 .input-group input:focus, .input-group select:focus {
   outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
@@ -263,7 +262,7 @@ h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
 .action-btn:hover { background: var(--bg-card); color: var(--primary); transform: scale(1.1); box-shadow: var(--shadow-card); }
 .action-btn.danger:hover { background: var(--danger-bg); color: var(--danger-text); }
 
-/* Dropdown (Backup) */
+/* Dropdown */
 .dropdown-menu {
   position: absolute; right: 0; top: 120%; background: var(--bg-card); border-radius: 8px;
   box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); border: 1px solid var(--border-color);
