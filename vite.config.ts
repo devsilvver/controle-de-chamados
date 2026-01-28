@@ -1,11 +1,12 @@
 import path from 'path';
+import fs from 'fs';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     
-    // Captura a data e hora atual do build (Fuso horário de Brasília)
+    // Gera a data/hora atual no fuso de Brasília para exibição e controle de versão
     const buildDate = new Date().toLocaleString('pt-BR', {
         timeZone: 'America/Sao_Paulo',
         day: '2-digit',
@@ -17,8 +18,8 @@ export default defineConfig(({ mode }) => {
     });
 
     return {
-      // Define a variável global disponível no código React
       define: {
+        // Variável global acessível no React
         '__BUILD_DATE__': JSON.stringify(buildDate),
       },
       server: {
@@ -30,7 +31,22 @@ export default defineConfig(({ mode }) => {
           '@': path.resolve(__dirname, '.'),
         }
       },
-      // (Opcional) Garante que o plugin do React esteja ativo caso não estivesse
-      plugins: [react()]
+      plugins: [
+        react(),
+        {
+          name: 'generate-version-file',
+          // Executa ao finalizar o bundle
+          closeBundle() {
+            const distPath = path.resolve(__dirname, 'dist');
+            const versionFile = path.join(distPath, 'version.json');
+            
+            if (fs.existsSync(distPath)) {
+              // Cria o arquivo que o site vai consultar para saber se mudou
+              fs.writeFileSync(versionFile, JSON.stringify({ version: buildDate }));
+              console.log(`✅ version.json gerado: ${buildDate}`);
+            }
+          }
+        }
+      ]
     };
 });

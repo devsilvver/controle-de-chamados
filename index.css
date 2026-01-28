@@ -74,6 +74,7 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* Transições suaves */
 .card, .year-box, .ticket-card, input, select, .btn-icon-only, .pill, .modal-content, .dropdown-menu {
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
@@ -85,7 +86,6 @@ header { margin-bottom: 2rem; padding-top: 1rem; }
 .header-container { display: flex; justify-content: space-between; align-items: center; }
 .header-actions { position: relative; display: flex; gap: 0.75rem; align-items: center; }
 
-/* Nova classe para a data do build */
 .build-date {
     font-size: 0.75rem;
     color: var(--text-secondary);
@@ -299,8 +299,9 @@ h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
   position: fixed; bottom: 3rem; left: 50%; transform: translateX(-50%) translateY(100px);
   background: var(--text-primary); color: var(--bg-card); padding: 1rem 2rem;
   border-radius: 50px; font-weight: 500; font-size: 1rem;
-  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 100;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 9999;
 }
+.toast.info { border: 2px solid var(--info-text); }
 .toast.show { transform: translateX(-50%) translateY(0); }
 
 /* --- MODAIS & CELEBRAÇÃO --- */
@@ -352,7 +353,7 @@ h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
   .controls-bar { flex-direction: column; align-items: stretch; }
   .search-group { flex-direction: column; }
   .card-left { gap: 0.75rem; }
-  .build-date { display: none; /* Esconder em telas menores se faltar espaço */ }
+  .build-date { display: none; }
 }
 
 @media (max-width: 600px) {

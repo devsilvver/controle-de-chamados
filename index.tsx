@@ -94,6 +94,7 @@ const formatDateHeader = (dateKey: string): string => {
 
 const toLocalISOString = (isoString: string) => {
     const date = new Date(isoString);
+    if (isNaN(date.getTime())) return '';
     const offset = date.getTimezoneOffset() * 60000;
     return new Date(date.getTime() - offset).toISOString().slice(0, 16);
 };
@@ -170,15 +171,20 @@ const App: React.FC = () => {
 
   const prevTodaysCount = useRef(todaysCount);
 
+  // --- EFEITOS ---
+
+  // 1. Aplica o tema
   useEffect(() => {
     document.body.className = `${theme}-theme`;
     localStorage.setItem('theme', theme);
   }, [theme]);
 
+  // 2. Salva tickets
   useEffect(() => {
     localStorage.setItem('tickets', JSON.stringify(tickets));
   }, [tickets]);
   
+  // 3. Verifica meta diária
   useEffect(() => {
     if (prevTodaysCount.current < DAILY_GOAL && todaysCount >= DAILY_GOAL) {
       setCelebrationModal(true);
@@ -188,8 +194,9 @@ const App: React.FC = () => {
     prevTodaysCount.current = todaysCount;
   }, [todaysCount]);
 
+  // 4. Limpa toast
   useEffect(() => {
-    if (toast.message) {
+    if (toast.message && !toast.message.includes('Nova atualização')) { // Não limpa o toast de update automaticamente
       const timer = setTimeout(() => {
         setToast({ message: '', type: 'success' });
       }, 3000);
@@ -197,6 +204,7 @@ const App: React.FC = () => {
     }
   }, [toast]);
 
+  // 5. Fecha menu ao clicar fora
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
         const target = event.target as Node;
@@ -209,6 +217,36 @@ const App: React.FC = () => {
         document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isDataMenuOpen]);
+
+  // 6. ATUALIZAÇÃO AUTOMÁTICA
+  useEffect(() => {
+    let checkInterval: NodeJS.Timeout;
+
+    const checkVersion = async () => {
+        try {
+            const response = await fetch(`/version.json?t=${new Date().getTime()}`);
+            if (!response.ok) return;
+
+            const data = await response.json();
+            const serverVersion = data.version;
+            const localVersion = __BUILD_DATE__; 
+
+            if (serverVersion && localVersion && serverVersion !== localVersion) {
+                setToast({ 
+                    message: 'Nova atualização disponível! 🔄 Clique aqui.', 
+                    type: 'info' 
+                });
+            }
+        } catch (error) {
+            console.error("Erro ao verificar atualização", error);
+        }
+    };
+
+    checkInterval = setInterval(checkVersion, 60000); // 60 segundos
+    checkVersion(); // Checa ao iniciar
+
+    return () => clearInterval(checkInterval);
+  }, []);
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
@@ -338,7 +376,7 @@ const App: React.FC = () => {
     else if (filterStatus === 'Presenciais') statusMatch = ticket.isPresencial === true;
     else statusMatch = ticket.status === filterStatus;
 
-    // --- LÓGICA DE BUSCA ATUALIZADA (WO ou UF) ---
+    // Busca por WO ou UF
     const term = searchTerm.toLowerCase();
     const searchMatch = ticket.wo.toLowerCase().includes(term) || ticket.uf.toLowerCase().includes(term);
 
@@ -688,7 +726,16 @@ const App: React.FC = () => {
         </div>
       </section>
       
-      <div className={`toast ${toast.type} ${toast.message ? 'show' : ''}`}>
+      {/* TOAST CLICÁVEL PARA UPDATE */}
+      <div 
+        className={`toast ${toast.type} ${toast.message ? 'show' : ''}`}
+        onClick={() => {
+            if (toast.message.includes('Nova atualização')) {
+                window.location.reload();
+            }
+        }}
+        style={{ cursor: toast.message.includes('Nova atualização') ? 'pointer' : 'default' }}
+      >
         {toast.message}
       </div>
     </main>
