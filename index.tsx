@@ -92,7 +92,6 @@ const formatDateHeader = (dateKey: string): string => {
     return formatted.charAt(0).toUpperCase() + formatted.slice(1);
 };
 
-// Converte data UTC/ISO para formato aceito pelo input datetime-local (YYYY-MM-DDThh:mm) considerando fuso local
 const toLocalISOString = (isoString: string) => {
     const date = new Date(isoString);
     const offset = date.getTimezoneOffset() * 60000;
@@ -150,7 +149,6 @@ const App: React.FC = () => {
   const [isDataMenuOpen, setIsDataMenuOpen] = useState<boolean>(false);
   
   const [editingTicketId, setEditingTicketId] = useState<number | null>(null);
-  // Agora inclui timestamp
   const [editFormData, setEditFormData] = useState<Omit<Ticket, 'id'>>({ wo: '', uf: '', status: 'Concluído', isPresencial: false, timestamp: '' });
 
   const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean, ticketId: number | null }>({ isOpen: false, ticketId: null });
@@ -253,7 +251,7 @@ const App: React.FC = () => {
         uf: ticket.uf, 
         status: ticket.status, 
         isPresencial: ticket.isPresencial || false,
-        timestamp: ticket.timestamp // Carrega a data original
+        timestamp: ticket.timestamp
     });
   };
 
@@ -340,7 +338,9 @@ const App: React.FC = () => {
     else if (filterStatus === 'Presenciais') statusMatch = ticket.isPresencial === true;
     else statusMatch = ticket.status === filterStatus;
 
-    const searchMatch = ticket.wo.toLowerCase().includes(searchTerm.toLowerCase());
+    // --- LÓGICA DE BUSCA ATUALIZADA (WO ou UF) ---
+    const term = searchTerm.toLowerCase();
+    const searchMatch = ticket.wo.toLowerCase().includes(term) || ticket.uf.toLowerCase().includes(term);
 
     let dateMatch = true;
     if (searchDate) {
@@ -413,7 +413,6 @@ const App: React.FC = () => {
              </div>
           </div>
           <div className="header-actions" ref={dataMenuRef}>
-            {/* BUILD DATE AGORA NO HEADER */}
             <span className="build-date" title="Data da última atualização">
                v. {__BUILD_DATE__}
             </span>
@@ -538,7 +537,7 @@ const App: React.FC = () => {
                 <span className="icon">🔎</span>
                 <input 
                  type="text"
-                 placeholder="Pesquisar WO..."
+                 placeholder="Pesquisar WO ou UF..."
                  value={searchTerm}
                  onChange={(e) => setSearchTerm(e.target.value)}
                />
@@ -604,7 +603,6 @@ const App: React.FC = () => {
                                                                     {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                                                                 </select>
                                                                 
-                                                                {/* CAMPO DE EDIÇÃO DE DATA */}
                                                                 <input 
                                                                     type="datetime-local"
                                                                     className="edit-input date-edit"
