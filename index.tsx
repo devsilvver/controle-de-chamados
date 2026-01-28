@@ -13,6 +13,7 @@ interface Ticket {
 
 type ToastType = 'success' | 'info' | 'danger';
 type FilterType = Ticket['status'] | 'All' | 'Presenciais';
+type ThemeType = 'light' | 'dark';
 
 const DAILY_GOAL = 8;
 
@@ -25,7 +26,9 @@ const Icons = {
   Check: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>,
   Close: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>,
   Trophy: () => <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#FFD700" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 21h8m-4-9v9m0-9a5 5 0 0 1-5-5V3h10v4a5 5 0 0 1-5 5zm-9-5a9 9 0 0 1 9-9 9 9 0 0 1 9 9"/></svg>,
-  Calendar: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+  Calendar: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>,
+  Sun: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>,
+  Moon: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
 };
 
 const Confetti: React.FC = () => {
@@ -68,18 +71,16 @@ const getMonthName = (monthIndex: number) => {
   return name.charAt(0).toUpperCase() + name.slice(1);
 };
 
-// Formata o cabeçalho do dia (Hoje, Ontem, Segunda-feira...)
 const formatDateHeader = (dateKey: string): string => {
     const today = new Date();
     const yesterday = new Date();
     yesterday.setDate(today.getDate() - 1);
     
-    // Zera horas para comparação correta
     today.setHours(0,0,0,0);
     yesterday.setHours(0,0,0,0);
     
     const keyDate = new Date(dateKey);
-    keyDate.setHours(0,0,0,0); // Garante comparação apenas por dia
+    keyDate.setHours(0,0,0,0);
 
     if (keyDate.getTime() === today.getTime()) return 'Hoje';
     if (keyDate.getTime() === yesterday.getTime()) return 'Ontem';
@@ -91,6 +92,17 @@ const formatDateHeader = (dateKey: string): string => {
 // --- Componente Principal ---
 const App: React.FC = () => {
   const statusOptions: Ticket['status'][] = ['Concluído', 'Diagnóstico', 'Trabalhado', 'Cancelado'];
+
+  // Estado do Tema
+  const [theme, setTheme] = useState<ThemeType>(() => {
+    try {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark' || savedTheme === 'light') return savedTheme;
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    } catch {
+      return 'light';
+    }
+  });
 
   const [tickets, setTickets] = useState<Ticket[]>(() => {
     try {
@@ -150,6 +162,12 @@ const App: React.FC = () => {
 
   const prevTodaysCount = useRef(todaysCount);
 
+  // Efeito para aplicar o tema
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
   useEffect(() => {
     localStorage.setItem('tickets', JSON.stringify(tickets));
   }, [tickets]);
@@ -184,6 +202,10 @@ const App: React.FC = () => {
         document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isDataMenuOpen]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -295,8 +317,6 @@ const App: React.FC = () => {
     reader.readAsText(file);
   };
 
-  // --- Lógica de Filtro e Agrupamento (Ano > Mês > Dia) ---
-
   const filterOptions: FilterType[] = ['All', 'Presenciais', ...statusOptions];
 
   const filteredTickets = tickets.filter(ticket => {
@@ -320,16 +340,12 @@ const App: React.FC = () => {
     return statusMatch && searchMatch && dateMatch;
   });
   
-  // Agrupamento: Ano -> Mês -> Dia -> Tickets
-  // Tipo: Record<Year, Record<Month, Record<DayKey, Ticket[]>>>
   const groupedTickets = filteredTickets.reduce((acc, ticket) => {
     const ticketDate = parseTimestamp(ticket.timestamp);
     if (isNaN(ticketDate.getTime())) return acc;
     
     const year = ticketDate.getFullYear();
-    const month = ticketDate.getMonth(); // 0 a 11
-    
-    // Cria uma chave de data para o dia (YYYY-MM-DD para ordenação correta)
+    const month = ticketDate.getMonth();
     const dayKey = new Date(year, month, ticketDate.getDate()).toISOString();
 
     if (!acc[year]) acc[year] = {};
@@ -382,6 +398,14 @@ const App: React.FC = () => {
              </div>
           </div>
           <div className="header-actions" ref={dataMenuRef}>
+            <button 
+                className="btn-icon-only" 
+                onClick={toggleTheme}
+                title={theme === 'light' ? 'Ativar Modo Noturno' : 'Ativar Modo Claro'}
+            >
+                {theme === 'light' ? <Icons.Moon /> : <Icons.Sun />}
+            </button>
+            
             <button 
               className="btn-icon-only" 
               onClick={(e) => {
@@ -539,14 +563,13 @@ const App: React.FC = () => {
                   <div className="year-content">
                       {Object.keys(groupedTickets[year])
                           .map(Number)
-                          .sort((a, b) => b - a) // Ordena meses desc
+                          .sort((a, b) => b - a)
                           .map(month => (
                               <div key={month} className="month-box">
                                   <h3 className="month-title">{getMonthName(month)}</h3>
                                   <div className="month-content">
-                                      {/* Iterar sobre os Dias dentro do Mês */}
                                       {Object.keys(groupedTickets[year][month])
-                                        .sort((a, b) => new Date(b).getTime() - new Date(a).getTime()) // Ordena dias desc
+                                        .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
                                         .map(dayKey => (
                                           <div key={dayKey} className="day-group">
                                              <h4 className="day-header">{formatDateHeader(dayKey)}</h4>
